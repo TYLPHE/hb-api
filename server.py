@@ -6,7 +6,7 @@ import requests
 
 
 app = Flask(__name__)
-app.secret_key = 'SECRETSECRETSECRET'
+app.secret_key = 'secrethere'
 
 # This configuration option makes the Flask interactive debugger
 # more useful (you should remove this line in production though)
@@ -41,7 +41,14 @@ def find_afterparties():
     sort = request.args.get('sort', '')
 
     url = 'https://app.ticketmaster.com/discovery/v2/events'
-    payload = {'apikey': API_KEY}
+    payload = {
+        'apikey': API_KEY,
+        'keyword': keyword,
+        'postalCode': postalcode,
+        'radius': radius,
+        'unit': unit,
+        'sort': sort,
+    }
 
     # TODO: Make a request to the Event Search endpoint to search for events
     #
@@ -54,9 +61,19 @@ def find_afterparties():
     # - Replace the empty list in `events` with the list of events from your
     #   search results
 
-    data = {'Test': ['This is just some test data'],
-            'page': {'totalElements': 1}}
-    events = []
+    """ 
+    >>> res = requests.get(url, params=payload)
+    >>> data = res.json()
+    >>> events = data['_embedded']['events']
+    >>> events
+    (a bunch of events will appear)
+    >>> events[0]
+    (data of the first event will appear) 
+    """
+
+    res = requests.get(url, params=payload)
+    data = res.json()
+    events = data['_embedded']['events']
 
     return render_template('search-results.html',
                            pformat=pformat,
@@ -72,10 +89,29 @@ def find_afterparties():
 @app.route('/event/<id>')
 def get_event_details(id):
     """View the details of an event."""
+    
+    """ 
+    >>> res = requests.get(url, params=payload)
+    >>> data = res.json()
+    >>> events = data['_embedded']['events']
+    >>> events
+    (a bunch of events will appear)
+    >>> events[0]
+    (data of the first event will appear) 
+    """
 
     # TODO: Finish implementing this view function
-
-    return render_template('event-details.html')
+    url = f'https://app.ticketmaster.com/discovery/v2/events/{id}'
+    
+    # payload = {
+    #     'apikey': API_KEY,
+    # }
+    res = requests.get(url)
+    # res = requests.get(url, params=payload)
+    data = res.json()
+    events = data['_embedded']['events']
+    event = events[id]
+    return render_template('event-details.html', id=id)
 
 
 if __name__ == '__main__':
